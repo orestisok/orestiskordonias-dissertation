@@ -5,11 +5,8 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
-
-	//state
 	import PasswordInput from '$lib/components/password-input.svelte';
-
-
+	import AuthPages from '$lib/components/auth-pages.svelte';
 </script>
 
 <div class="flex min-h-svh items-center justify-center p-4 bg-primary">
@@ -18,6 +15,9 @@
 			<Card.Title>CivicScan</Card.Title>
 		</Card.Header>
 		<Card.Content>
+			<div class="mb-6">
+				<AuthPages />
+			</div>
 			<form>
 				<div class="flex flex-col gap-6">
 					<div class="grid gap-2">
@@ -34,10 +34,9 @@
 						<div class="flex items-center">
 							<Label for="password">Password</Label>
 						</div>
-
-						<PasswordInput id="password"/>
-						</div>
+						<PasswordInput id="password" />
 					</div>
+				</div>
 			</form>
 			<div>
 				<div>
@@ -49,7 +48,6 @@
 					</div>
 				</div>
 			</div>
-
 		</Card.Content>
 		<Card.Footer class="flex-col">
 			<Button type="submit" class="w-full">Log In</Button>

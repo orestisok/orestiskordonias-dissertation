@@ -5,6 +5,7 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import PasswordInput from '$lib/components/password-input.svelte';
+	import AuthPages from '$lib/components/auth-pages.svelte';
 
 	//state
 	let showPassword = $state(false);
@@ -16,6 +17,11 @@
 			<Card.Title>CivicScan</Card.Title>
 			<Card.Description>Create your account</Card.Description>
 		</Card.Header>
+		<Card.Content>
+			<div class="mb-6">
+				<AuthPages></AuthPages>
+			</div>
+		</Card.Content>
 		<Card.Content>
 			<form>
 				<div class="flex flex-col gap-6">
