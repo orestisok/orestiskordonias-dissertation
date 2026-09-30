@@ -54,3 +54,7 @@ export const reportEvents = pgTable(
 		)
 	]
 );
+
+export type ReportEventType = (typeof reportEventType.enumValues)[number];
+export type ReportEvent = typeof reportEvents.$inferSelect;
+export type NewReportEvent = typeof reportEvents.$inferInsert;

@@ -26,3 +26,6 @@ export const reportPhotos = pgTable(
 		check('report_photos_position_non_negative', sql`${table.position} >= 0`)
 	]
 );
+
+export type ReportPhoto = typeof reportPhotos.$inferSelect;
+export type NewReportPhoto = typeof reportPhotos.$inferInsert;

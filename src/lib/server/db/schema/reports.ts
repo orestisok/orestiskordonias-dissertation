@@ -63,3 +63,7 @@ export const reports = pgTable(
 		check('reports_description_not_blank', sql`btrim(${table.description}) <> ''`)
 	]
 );
+
+export type ReportStatus = (typeof reportStatus.enumValues)[number];
+export type Report = typeof reports.$inferSelect;
+export type NewReport = typeof reports.$inferInsert;

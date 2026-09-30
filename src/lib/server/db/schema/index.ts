@@ -3,3 +3,4 @@ export * from './categories';
 export * from './reports';
 export * from './report-events';
 export * from './report-photos';
+export * from './relations';

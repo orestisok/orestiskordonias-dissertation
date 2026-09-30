@@ -21,3 +21,6 @@ export const categories = pgTable(
 		check('categories_slug_not_blank', sql`btrim(${table.slug}) <> ''`)
 	]
 );
+
+export type Category = typeof categories.$inferSelect;
+export type NewCategory = typeof categories.$inferInsert;
