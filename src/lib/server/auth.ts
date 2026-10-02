@@ -4,6 +4,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
+import type { UserRole } from '$lib/server/db/schema';
 
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
@@ -20,3 +21,8 @@ export const auth = betterAuth({
 		sveltekitCookies(getRequestEvent) // make sure this is the last plugin in the array
 	]
 });
+
+// Where each role lands after logging in. /dashboard is a placeholder for now.
+export function homePathFor(role: UserRole) {
+	return role === 'staff' ? '/dashboard' : '/my-reports';
+}
