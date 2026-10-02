@@ -3,6 +3,8 @@
 
 	interface Props {
 		id: string;
+		name?: string;
+		autocomplete?: 'current-password' | 'new-password';
 		value?: string;
 		showPassword?: boolean;
 		placeholder?: string;
@@ -11,6 +13,8 @@
 
 	let {
 		id,
+		name,
+		autocomplete,
 		value = $bindable(''),
 		showPassword = $bindable(false),
 		placeholder = 'Enter your password',
@@ -21,6 +25,8 @@
 <div class="relative">
 	<Input
 		{id}
+		{name}
+		{autocomplete}
 		type={showPassword ? 'text' : 'password'}
 		class="border-2 border-input pl-2 pr-16"
 		{placeholder}
