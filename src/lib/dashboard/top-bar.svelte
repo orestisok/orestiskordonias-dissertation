@@ -6,6 +6,15 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Search, Bell } from '@lucide/svelte';
 	import MobileNav from '$lib/dashboard/mobile-nav.svelte';
+	import { cn } from '$lib/utils.js';
+	import { isActive } from '$lib/dashboard/nav';
+	import type { RouteId } from '$app/types';
+
+	const linkClass = (route: RouteId) =>
+		cn(
+			'font-medium transition-colors',
+			isActive(route) ? 'text-primary' : 'text-foreground hover:text-primary'
+		);
 </script>
 
 <header class="flex h-16 items-center justify-between gap-4 px-4 md:px-6">
@@ -16,10 +25,27 @@
 		<a href={resolve('/submit-report')} class="text-lg font-semibold text-primary"> CivicScan </a>
 
 		<nav class="hidden items-center gap-6 md:flex">
-			<!-- TODO: UPDATE ROUTING -->
-			<a href={resolve('/submit-report')}> Submit Report </a>
-			<a href={resolve('/my-reports')}> My Reports </a>
-			<a href={resolve('/public-issues')}> Public Issues </a>
+			<a
+				href={resolve('/submit-report')}
+				class={linkClass('/submit-report')}
+				aria-current={isActive('/submit-report') ? 'page' : undefined}
+			>
+				Submit Report
+			</a>
+			<a
+				href={resolve('/my-reports')}
+				class={linkClass('/my-reports')}
+				aria-current={isActive('/my-reports') ? 'page' : undefined}
+			>
+				My Reports
+			</a>
+			<a
+				href={resolve('/public-issues')}
+				class={linkClass('/public-issues')}
+				aria-current={isActive('/public-issues') ? 'page' : undefined}
+			>
+				Public Issues
+			</a>
 		</nav>
 	</div>
 
@@ -52,7 +78,17 @@
 				<DropdownMenu.Label>My account</DropdownMenu.Label>
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item>Profile</DropdownMenu.Item>
-				<DropdownMenu.Item>Settings</DropdownMenu.Item>
+				<DropdownMenu.Item class={isActive('/settings') ? 'text-primary' : undefined}>
+					{#snippet child({ props })}
+						<a
+							{...props}
+							href={resolve('/settings')}
+							aria-current={isActive('/settings') ? 'page' : undefined}
+						>
+							Settings
+						</a>
+					{/snippet}
+				</DropdownMenu.Item>
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item>Sign out</DropdownMenu.Item>
 			</DropdownMenu.Content>

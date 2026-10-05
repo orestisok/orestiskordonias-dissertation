@@ -1,6 +1,9 @@
 <!-- mobile-nav.svelte -->
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { cn } from '$lib/utils.js';
+	import { isActive } from '$lib/dashboard/nav';
+	import type { RouteId } from '$app/types';
 	import { Button } from '$lib/components/ui/button';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as Sheet from '$lib/components/ui/sheet';
@@ -8,6 +11,12 @@
 
 	let open = $state(false);
 	const close = () => (open = false);
+
+	const linkClass = (route: RouteId) =>
+		cn(
+			'flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium transition-colors',
+			isActive(route) ? 'bg-accent text-primary' : 'text-foreground hover:bg-accent'
+		);
 </script>
 
 <Sheet.Root bind:open>
@@ -39,17 +48,18 @@
 		<nav class="flex flex-1 flex-col gap-1 p-4">
 			<a
 				href={resolve('/submit-report')}
-				class="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-accent"
+				class={linkClass('/submit-report')}
+				aria-current={isActive('/submit-report') ? 'page' : undefined}
 				onclick={close}
 			>
 				<CirclePlus class="size-5" />
 				Submit Report
 			</a>
 
-			<!--My Reports -->
 			<a
 				href={resolve('/my-reports')}
-				class="flex items-center gap-3 rounded-md bg-accent px-3 py-2.5 text-base font-medium text-primary transition-colors"
+				class={linkClass('/my-reports')}
+				aria-current={isActive('/my-reports') ? 'page' : undefined}
 				onclick={close}
 			>
 				<FileText class="size-5" />
@@ -58,7 +68,8 @@
 
 			<a
 				href={resolve('/public-issues')}
-				class="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-accent"
+				class={linkClass('/public-issues')}
+				aria-current={isActive('/public-issues') ? 'page' : undefined}
 				onclick={close}
 			>
 				<Map class="size-5" />
@@ -69,7 +80,8 @@
 
 			<a
 				href={resolve('/settings')}
-				class="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-accent"
+				class={linkClass('/settings')}
+				aria-current={isActive('/settings') ? 'page' : undefined}
 				onclick={close}
 			>
 				<Settings class="size-5" />
