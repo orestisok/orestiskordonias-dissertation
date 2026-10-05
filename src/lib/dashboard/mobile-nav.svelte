@@ -38,7 +38,7 @@
 		<!-- Primary nav -->
 		<nav class="flex flex-1 flex-col gap-1 p-4">
 			<a
-				href={resolve('/submit')}
+				href={resolve('/submit-report')}
 				class="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-accent"
 				onclick={close}
 			>

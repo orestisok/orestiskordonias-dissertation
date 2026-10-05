@@ -13,11 +13,11 @@
 	<div class="flex items-center gap-2.5 md:gap-8">
 		<MobileNav />
 
-		<a href={resolve('/submit')} class="text-lg font-semibold text-primary"> CivicScan </a>
+		<a href={resolve('/submit-report')} class="text-lg font-semibold text-primary"> CivicScan </a>
 
 		<nav class="hidden items-center gap-6 md:flex">
 			<!-- TODO: UPDATE ROUTING -->
-			<a href={resolve('/submit')}> Submit Report </a>
+			<a href={resolve('/submit-report')}> Submit Report </a>
 			<a href={resolve('/my-reports')}> My Reports </a>
 			<a href={resolve('/public-issues')}> Public Issues </a>
 		</nav>
