@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { pushState } from '$app/navigation';
+	import { pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -46,6 +46,33 @@
 	let category = $state('');
 	let description = $state('');
 	let address = $state('');
+
+	const MIN_DESCRIPTION = 20;
+
+	// Errors only show once the user has tried to continue, then update live
+	let attempted = $state(false);
+	const detailsValid = $derived(
+		category !== '' && description.trim().length >= MIN_DESCRIPTION
+	);
+	const categoryError = $derived(attempted && !category ? 'Please select an issue category.' : '');
+	const descriptionError = $derived(
+		attempted && description.trim().length < MIN_DESCRIPTION
+			? `Please provide a longer description (at least ${MIN_DESCRIPTION} characters).`
+			: ''
+	);
+
+	function nextFromDetails() {
+		attempted = true;
+		if (detailsValid) goToStep(2);
+	}
+
+	// Step lives in history state, so the forward button could skip past step 1
+	$effect(() => {
+		if (current > 1 && !detailsValid) {
+			attempted = true;
+			replaceState('', { step: 1 });
+		}
+	});
 </script>
 
 <svelte:head>
@@ -149,7 +176,9 @@
 								<select
 									id="category"
 									bind:value={category}
-									class="border-input bg-muted/40 focus-visible:border-ring focus-visible:ring-ring/30 h-11 w-full appearance-none border px-3 pr-10 text-sm outline-none focus-visible:ring-2 {category
+									aria-invalid={!!categoryError}
+									aria-describedby={categoryError ? 'category-error' : undefined}
+									class="border-input bg-muted/40 focus-visible:border-ring focus-visible:ring-ring/30 aria-invalid:border-destructive h-11 w-full appearance-none border px-3 pr-10 text-sm outline-none focus-visible:ring-2 {category
 										? 'text-foreground'
 										: 'text-muted-foreground'}"
 								>
@@ -164,6 +193,11 @@
 									class="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2"
 								/>
 							</div>
+							{#if categoryError}
+								<p id="category-error" class="text-destructive text-xs" role="alert">
+									{categoryError}
+								</p>
+							{/if}
 						</div>
 
 						<div class="flex flex-col gap-2">
@@ -173,15 +207,34 @@
 							<Textarea
 								id="description"
 								bind:value={description}
+								aria-invalid={!!descriptionError}
+								aria-describedby="description-hint"
 								placeholder="Please provide specific details about the issue..."
 								class="min-h-32"
 							/>
-							<p class="text-muted-foreground text-xs">Min. 20 characters required.</p>
+							<div class="flex justify-between gap-4 text-xs">
+								{#if descriptionError}
+									<p id="description-hint" class="text-destructive" role="alert">
+										{descriptionError}
+									</p>
+								{:else}
+									<p id="description-hint" class="text-muted-foreground">
+										Min. {MIN_DESCRIPTION} characters required.
+									</p>
+								{/if}
+								<span
+									class="shrink-0 tabular-nums {descriptionError
+										? 'text-destructive'
+										: 'text-muted-foreground'}"
+								>
+									{description.trim().length}/{MIN_DESCRIPTION}
+								</span>
+							</div>
 						</div>
 					</div>
 
 					<div class="flex justify-end">
-						<Button onclick={() => goToStep(2)}>
+						<Button onclick={nextFromDetails}>
 							Next: Location & Photos
 							<HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} />
 						</Button>
