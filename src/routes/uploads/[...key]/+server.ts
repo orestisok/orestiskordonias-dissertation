@@ -2,7 +2,6 @@ import { error } from '@sveltejs/kit';
 import { readPhoto } from '$lib/server/storage';
 import type { RequestHandler } from './$types';
 
-// Public, like the reports on the public issues map; keys contain a random uuid
 export const GET: RequestHandler = async ({ params }) => {
 	const photo = await readPhoto(params.key);
 	if (!photo) error(404, 'Not found');
@@ -11,7 +10,6 @@ export const GET: RequestHandler = async ({ params }) => {
 		headers: {
 			'Content-Type': photo.contentType,
 			'Content-Length': String(photo.body.byteLength),
-			// Keys are never reused, so the file behind one never changes
 			'Cache-Control': 'public, max-age=31536000, immutable',
 			'X-Content-Type-Options': 'nosniff'
 		}

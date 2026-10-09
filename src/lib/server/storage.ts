@@ -4,12 +4,12 @@ import path from 'node:path';
 import { env } from '$env/dynamic/private';
 import { MAX_PHOTO_BYTES } from '$lib/photos';
 
-// Local stand-in for object storage: an object key is a path relative to this folder
 const root = path.resolve(env.UPLOADS_DIR || 'uploads');
 
 const contentTypes: Record<string, string> = { jpg: 'image/jpeg', png: 'image/png' };
 
-// Trust the file's bytes, not the browser-supplied type or name
+export class InvalidPhotoError extends Error {}
+
 function sniffExtension(bytes: Uint8Array): string | null {
 	if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'jpg';
 	const png = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -17,20 +17,20 @@ function sniffExtension(bytes: Uint8Array): string | null {
 	return null;
 }
 
-// Rejects keys that would escape the uploads folder (../, absolute paths)
 function resolveKey(key: string) {
 	const file = path.resolve(root, key);
 	if (!file.startsWith(root + path.sep)) throw new Error(`Invalid object key: ${key}`);
 	return file;
 }
 
-/** Writes the photo and returns its object key for report_photos.object_key. */
 export async function saveReportPhoto(reportId: string, file: File) {
-	if (file.size > MAX_PHOTO_BYTES) throw new Error('Photo is larger than 10MB');
+	if (file.size > MAX_PHOTO_BYTES) {
+		throw new InvalidPhotoError(`${file.name} is larger than 10MB.`);
+	}
 
 	const bytes = new Uint8Array(await file.arrayBuffer());
 	const ext = sniffExtension(bytes);
-	if (!ext) throw new Error('Photo is not a JPG or PNG image');
+	if (!ext) throw new InvalidPhotoError(`${file.name} is not a JPG or PNG image.`);
 
 	const key = `reports/${reportId}/${randomUUID()}.${ext}`;
 	const target = resolveKey(key);
@@ -39,7 +39,6 @@ export async function saveReportPhoto(reportId: string, file: File) {
 	return key;
 }
 
-/** Returns the photo's bytes and content type, or null if it doesn't exist. */
 export async function readPhoto(key: string) {
 	let file: string;
 	try {
@@ -59,7 +58,6 @@ export async function readPhoto(key: string) {
 	}
 }
 
-/** Removes every photo of a report; rows cascade in the db, files don't. */
 export async function deleteReportPhotos(reportId: string) {
 	await rm(resolveKey(`reports/${reportId}`), { recursive: true, force: true });
 }
