@@ -2,8 +2,6 @@ import { sql } from 'drizzle-orm';
 import { check, pgTable, smallint, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { reports } from './reports';
 
-// Photo metadata only; the files live on disk under UPLOADS_DIR (lib/server/storage.ts).
-// Deleting a report removes these rows, but the files need deleteReportPhotos.
 export const reportPhotos = pgTable(
 	'report_photos',
 	{
@@ -11,8 +9,6 @@ export const reportPhotos = pgTable(
 		reportId: uuid('report_id')
 			.notNull()
 			.references(() => reports.id, { onDelete: 'cascade' }),
-		// Object key relative to the uploads folder (e.g. reports/<id>/<uuid>.jpg), never a
-		// full URL or path, so the storage location can change later
 		objectKey: text('object_key').notNull().unique(),
 		// Display order within the report, starting at 0
 		position: smallint('position').default(0).notNull(),
