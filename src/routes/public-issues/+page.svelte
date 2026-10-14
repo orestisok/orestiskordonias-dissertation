@@ -7,201 +7,144 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { cn } from '$lib/utils.js';
+	import { statusMeta } from '$lib/reports';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import {
-		Eye,
-		Location01Icon,
-		CheckmarkBadge01Icon,
-		ThumbsUpIcon
-	} from '@hugeicons/core-free-icons';
+	import { Eye, Location01Icon, Image01Icon } from '@hugeicons/core-free-icons';
 	import mapboxgl from 'mapbox-gl';
 	import 'mapbox-gl/dist/mapbox-gl.css';
 	import { onMount } from 'svelte';
 	import { PUBLIC_MAPBOX_ACCESS_TOKEN } from '$env/static/public';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
 
 	mapboxgl.accessToken = PUBLIC_MAPBOX_ACCESS_TOKEN;
 
-	type IssueStatus = 'critical' | 'in-progress' | 'open' | 'submitted';
-	type IssueType = 'traffic' | 'utilities' | 'critical';
+	type Issue = (typeof data.issues)[number];
+	type Status = Issue['status'];
 
-	interface Issue {
-		id: string;
-		status: IssueStatus;
-		updatedAt: string;
-		title: string;
-		category: string;
-		location: string;
-		stage: number;
-		type: IssueType;
-		lng: number;
-		lat: number;
-		description: string;
-		image: string;
-		verified: boolean;
-	}
+	const filterStatuses: Status[] = ['submitted', 'acknowledged', 'in_progress', 'resolved'];
 
-	interface StatusMeta {
-		label: string;
-		badge: string;
-	}
-
-	const statusMeta: Record<IssueStatus, StatusMeta> = {
-		critical: { label: 'Critical', badge: 'bg-destructive/10 text-destructive' },
-		'in-progress': { label: 'In Progress', badge: 'bg-amber-100 text-amber-700' },
-		open: { label: 'Open', badge: 'bg-primary/10 text-primary' },
-		submitted: { label: 'Submitted', badge: 'bg-sky-100 text-sky-700' }
-	};
-
-	const markerColors: Record<IssueType, string> = {
-		traffic: '#16a34a',
-		utilities: '#f59e0b',
-		critical: '#dc2626'
-	};
-
-	// mock data (for now)
-	const issues: Issue[] = [
-		{
-			id: 'RN-2481',
-			status: 'critical',
-			updatedAt: '12m ago',
-			title: 'Large Pothole - 5th Ave Crossing',
-			category: 'Infrastructure',
-			location: '4220 W 5th Ave',
-			stage: 2,
-			type: 'critical',
-			lng: 22.9444,
-			lat: 40.6401,
-			description:
-				'Deep pothole reported in middle lane. Causing significant traffic slow down and potential vehicle damage.',
-
-			image: 'https://picsum.photos/seed/rn2481/640/360',
-			verified: true
-		},
-		{
-			id: 'RN-2479',
-			status: 'in-progress',
-			updatedAt: '2h ago',
-			title: 'Street Light Outage',
-			category: 'Utilities',
-			location: 'Pine St & Lincoln',
-			stage: 3,
-			type: 'utilities',
-			lng: 22.9502,
-			lat: 40.6372,
-			description:
-				'Street light has been out for several nights, leaving the crossing dark. Crew assigned and replacement part on order.',
-
-			image: 'https://picsum.photos/seed/rn2479/640/360',
-			verified: true
-		},
-		{
-			id: 'RN-2465',
-			status: 'open',
-			updatedAt: '5h ago',
-			title: 'Graffiti on Public Bench',
-			category: 'Infrastructure',
-			location: 'Central Square Park',
-			stage: 1,
-			type: 'traffic',
-			lng: 22.9391,
-			lat: 40.6428,
-			description:
-				'Graffiti sprayed across a public bench near the square. Cleaning has been logged for review.',
-
-			image: 'https://picsum.photos/seed/rn2465/640/360',
-			verified: false
-		},
-		{
-			id: 'RN-2452',
-			status: 'submitted',
-			updatedAt: '8h ago',
-			title: 'Broken Playground Swing',
-			category: 'Parks & Greenery',
-			location: 'Lehtopuisto Park',
-			stage: 1,
-			type: 'traffic',
-			lng: 22.9558,
-			lat: 40.6455,
-			description:
-				'A swing in the playground is broken and unsafe for children. A coordinator will inspect within two working days.',
-
-			image: 'https://picsum.photos/seed/rn2452/640/360',
-			verified: false
-		}
-	];
-
-	// View state (split + map + list).
 	type ViewMode = 'split' | 'map' | 'list';
 	let view = $state<ViewMode>('split');
 
 	const mapVisible = $derived(view !== 'list');
 	const feedVisible = $derived(view !== 'map');
 
-	let activeRange = $state<'24h' | '7d' | '30d'>('24h');
+	type Range = 'all' | '24h' | '7d' | '30d';
+	const rangeMs: Record<Exclude<Range, 'all'>, number> = {
+		'24h': 86_400_000,
+		'7d': 7 * 86_400_000,
+		'30d': 30 * 86_400_000
+	};
+	const now = Date.now();
+
+	let activeRange = $state<Range>('all');
 	let category = $state('all');
 	let status = $state('all');
 
 	const categoryLabel = $derived(
-		category === 'all' ? 'All Categories' : category[0].toUpperCase() + category.slice(1)
+		data.categories.find((c) => String(c.id) === category)?.name ?? 'All Categories'
 	);
 	const statusLabel = $derived(
-		status === 'all' ? 'All Statuses' : status[0].toUpperCase() + status.slice(1)
+		status === 'all' ? 'All Statuses' : statusMeta[status as Status].label
 	);
 
-	const initialState = { lng: 22.9444, lat: 40.6401, zoom: 14 };
+	const visibleIssues = $derived(
+		data.issues.filter(
+			(issue) =>
+				(activeRange === 'all' || issue.createdAt >= now - rangeMs[activeRange]) &&
+				(category === 'all' || String(issue.categoryId) === category) &&
+				(status === 'all' || issue.status === status)
+		)
+	);
+
+	const defaultCenter: [number, number] = [22.9444, 40.6401];
 
 	let map: mapboxgl.Map | undefined;
+	let mapReady = $state(false);
 	let mapContainer: HTMLDivElement;
+	let markers: Record<string, mapboxgl.Marker> = {};
 
 	onMount(() => {
-		map = new mapboxgl.Map({
-			container: mapContainer,
-			center: [initialState.lng, initialState.lat],
-			zoom: initialState.zoom
-		});
-		map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+		const m = new mapboxgl.Map({ container: mapContainer, center: defaultCenter, zoom: 13 });
+		m.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-		for (const issue of issues) {
-			new mapboxgl.Marker({ color: markerColors[issue.type] })
-				.setLngLat([issue.lng, issue.lat])
-				.setPopup(new mapboxgl.Popup({ offset: 24 }).setText(issue.title))
-				.addTo(map);
+		if (data.issues.length) {
+			const bounds = new mapboxgl.LngLatBounds();
+			for (const issue of data.issues) bounds.extend([issue.lng, issue.lat]);
+			m.fitBounds(bounds, { padding: 60, maxZoom: 15, duration: 0 });
 		}
 
+		map = m;
+		mapReady = true;
+
 		return () => {
-			map?.remove();
+			markers = {};
+			m.remove();
 			map = undefined;
+			mapReady = false;
 		};
 	});
 
-	// Mapbox needs a resize to recalculate the canvas.
+	$effect(() => {
+		if (!mapReady || !map) return;
+
+		const ids = new Set(visibleIssues.map((issue) => issue.id));
+		for (const [id, marker] of Object.entries(markers)) {
+			if (!ids.has(id)) {
+				marker.remove();
+				delete markers[id];
+			}
+		}
+
+		for (const issue of visibleIssues) {
+			if (markers[issue.id]) continue;
+			const marker = new mapboxgl.Marker({ color: statusMeta[issue.status].color })
+				.setLngLat([issue.lng, issue.lat])
+				.addTo(map);
+			const element = marker.getElement();
+			element.style.cursor = 'pointer';
+			element.title = `${issue.reference}: ${issue.title}`;
+			element.addEventListener('click', (e) => {
+				e.stopPropagation();
+				openIssue(issue);
+			});
+			markers[issue.id] = marker;
+		}
+	});
+
 	$effect(() => {
 		if (mapVisible && map) {
 			requestAnimationFrame(() => map?.resize());
 		}
 	});
 
-	// Issue detail sheet.
 	let detailOpen = $state(false);
 	let selectedIssue = $state<Issue | null>(null);
+	let activePhoto = $state(0);
 
 	function openIssue(issue: Issue) {
 		selectedIssue = issue;
+		activePhoto = 0;
 		detailOpen = true;
+		if (mapVisible) map?.easeTo({ center: [issue.lng, issue.lat] });
 	}
 
-	// Sheet slides in from the right on desktop and up from the bottom on mobile.
 	let innerWidth = $state(0);
 	const sheetSide = $derived(innerWidth >= 768 ? 'right' : 'bottom');
 
-	// Static thumbnail from the Mapbox Static Images API
 	function staticMapUrl(issue: Issue) {
-		const color = markerColors[issue.type].replace('#', '');
+		const color = statusMeta[issue.status].color.replace('#', '');
 		return (
 			`https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/` +
 			`pin-s+${color}(${issue.lng},${issue.lat})/${issue.lng},${issue.lat},14/500x220@2x` +
 			`?access_token=${PUBLIC_MAPBOX_ACCESS_TOKEN}`
 		);
+	}
+
+	function street(issue: Issue) {
+		return issue.address?.split(',')[0] ?? `${issue.lat.toFixed(5)}, ${issue.lng.toFixed(5)}`;
 	}
 </script>
 
@@ -216,7 +159,6 @@
 		<TopBar />
 	</div>
 
-	<!-- Mobile view switcher -->
 	<div class="border-b bg-background px-4 py-2 md:hidden">
 		<Tabs.Root value={view} onValueChange={(v) => (view = (v as ViewMode) ?? 'split')}>
 			<Tabs.List class="grid w-full grid-cols-3">
@@ -229,7 +171,6 @@
 
 	<main class="flex-1">
 		<div class="flex flex-col md:h-[calc(100vh-4rem)] md:flex-row">
-			<!-- MAP COLUMN: stays mounted; visibility is toggled with a `hidden` class. -->
 			<div
 				class={cn(
 					'relative md:block md:h-full md:flex-1',
@@ -238,23 +179,18 @@
 			>
 				<div bind:this={mapContainer} class="h-full w-full"></div>
 
-				<!-- Legend -->
 				<div
-					class="absolute bottom-4 left-4 flex items-center gap-4 border bg-background/95 px-3 py-2 text-xs shadow-sm backdrop-blur"
+					class="absolute top-3 right-14 left-3 flex flex-wrap items-center gap-x-3 gap-y-1 md:top-auto md:right-auto md:bottom-4 md:left-4 md:gap-x-4 border bg-background/95 px-3 py-2 text-xs shadow-sm backdrop-blur"
 				>
-					<span class="flex items-center gap-1.5">
-						<span class="size-2.5 rounded-full bg-green-600"></span>Traffic
-					</span>
-					<span class="flex items-center gap-1.5">
-						<span class="size-2.5 rounded-full bg-amber-500"></span>Utilities
-					</span>
-					<span class="flex items-center gap-1.5">
-						<span class="size-2.5 rounded-full bg-red-600"></span>Critical
-					</span>
+					{#each filterStatuses as s (s)}
+						<span class="flex items-center gap-1.5">
+							<span class="size-2.5 rounded-full" style:background-color={statusMeta[s].color}
+							></span>{statusMeta[s].label}
+						</span>
+					{/each}
 				</div>
 			</div>
 
-			<!-- FEED COLUMN -->
 			<aside
 				class={cn(
 					'flex-col bg-background md:flex md:h-full md:w-105 md:shrink-0 md:border-l',
@@ -265,7 +201,8 @@
 					<div class="flex items-baseline justify-between gap-3">
 						<h1 class="font-heading text-2xl font-bold tracking-tight">Live Issue Feed</h1>
 						<span class="shrink-0 text-sm text-muted-foreground">
-							{issues.length * 62} Issues nearby
+							{visibleIssues.length}
+							{visibleIssues.length === 1 ? 'issue' : 'issues'}
 						</span>
 					</div>
 
@@ -273,12 +210,13 @@
 						<ToggleGroup.Root
 							type="single"
 							value={activeRange}
-							onValueChange={(v) => (activeRange = (v || '24h') as typeof activeRange)}
-							class="flex justify-start gap-2"
+							onValueChange={(v) => (activeRange = (v || 'all') as Range)}
+							class="grid w-full grid-cols-4 gap-1"
 						>
-							<ToggleGroup.Item value="24h">Past 24h</ToggleGroup.Item>
-							<ToggleGroup.Item value="7d">7 Days</ToggleGroup.Item>
-							<ToggleGroup.Item value="30d">30 Days</ToggleGroup.Item>
+							<ToggleGroup.Item value="all" class="px-1">All Time</ToggleGroup.Item>
+							<ToggleGroup.Item value="24h" class="px-1">24 Hours</ToggleGroup.Item>
+							<ToggleGroup.Item value="7d" class="px-1">7 Days</ToggleGroup.Item>
+							<ToggleGroup.Item value="30d" class="px-1">30 Days</ToggleGroup.Item>
 						</ToggleGroup.Root>
 					</div>
 
@@ -291,9 +229,9 @@
 								<Select.Trigger class="w-full">{categoryLabel}</Select.Trigger>
 								<Select.Content>
 									<Select.Item value="all">All Categories</Select.Item>
-									<Select.Item value="infrastructure">Infrastructure</Select.Item>
-									<Select.Item value="utilities">Utilities</Select.Item>
-									<Select.Item value="parks">Parks & Greenery</Select.Item>
+									{#each data.categories as c (c.id)}
+										<Select.Item value={String(c.id)}>{c.name}</Select.Item>
+									{/each}
 								</Select.Content>
 							</Select.Root>
 						</div>
@@ -306,10 +244,9 @@
 								<Select.Trigger class="w-full">{statusLabel}</Select.Trigger>
 								<Select.Content>
 									<Select.Item value="all">All Statuses</Select.Item>
-									<Select.Item value="critical">Critical</Select.Item>
-									<Select.Item value="in-progress">In Progress</Select.Item>
-									<Select.Item value="open">Open</Select.Item>
-									<Select.Item value="submitted">Submitted</Select.Item>
+									{#each filterStatuses as s (s)}
+										<Select.Item value={s}>{statusMeta[s].label}</Select.Item>
+									{/each}
 								</Select.Content>
 							</Select.Root>
 						</div>
@@ -317,13 +254,26 @@
 				</div>
 
 				<div class="flex flex-col gap-3 overflow-y-auto p-4 md:min-h-0 md:flex-1">
-					{#each issues as issue (issue.id)}
+					{#each visibleIssues as issue (issue.id)}
 						<article class="flex gap-4 border bg-background p-3">
-							<div class="size-20 shrink-0 bg-muted"></div>
+							{#if issue.photos[0]}
+								<img
+									src={issue.photos[0]}
+									alt={issue.title}
+									loading="lazy"
+									class="size-20 shrink-0 object-cover"
+								/>
+							{:else}
+								<div
+									class="flex size-20 shrink-0 items-center justify-center bg-muted text-muted-foreground"
+								>
+									<HugeiconsIcon icon={Image01Icon} strokeWidth={2} class="size-5" />
+								</div>
+							{/if}
 
 							<div class="min-w-0 flex-1">
 								<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-									<span class="text-xs font-semibold text-muted-foreground">{issue.id}</span>
+									<span class="text-xs font-semibold text-muted-foreground">{issue.reference}</span>
 									<Button
 										variant="outline"
 										size="sm"
@@ -341,24 +291,33 @@
 									>
 										{statusMeta[issue.status].label}
 									</span>
-									<span class="ml-auto text-xs text-muted-foreground">{issue.updatedAt}</span>
+									<span class="ml-auto text-xs text-muted-foreground">{issue.updatedAgo}</span>
 								</div>
 
 								<h2 class="font-heading mt-1.5 truncate text-base font-bold tracking-tight">
 									{issue.title}
 								</h2>
 								<p class="truncate text-xs text-muted-foreground">
-									{issue.category} · {issue.location}
+									{issue.category} · {street(issue)}
 								</p>
 
 								<div class="mt-2.5 flex gap-1.5">
-									{#each [1, 2, 3] as seg (seg)}
-										<span class="h-1.5 flex-1 {seg <= issue.stage ? 'bg-primary' : 'bg-muted'}"
+									{#each [1, 2, 3, 4] as seg (seg)}
+										<span
+											class="h-1.5 flex-1 {seg <= statusMeta[issue.status].stage
+												? 'bg-primary'
+												: 'bg-muted'}"
 										></span>
 									{/each}
 								</div>
 							</div>
 						</article>
+					{:else}
+						<p class="border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
+							{data.issues.length
+								? 'No issues match these filters.'
+								: 'No issues have been reported yet.'}
+						</p>
 					{/each}
 				</div>
 			</aside>
@@ -370,7 +329,6 @@
 	</footer>
 </div>
 
-<!-- Issue detail sheet -->
 <Sheet.Root bind:open={detailOpen}>
 	<Sheet.Content
 		side={sheetSide}
@@ -378,15 +336,13 @@
 	>
 		{#if selectedIssue}
 			{@const issue = selectedIssue}
-			<!-- Header -->
 			<div class="shrink-0 border-b px-5 pb-4 pt-5">
-				<p class="text-xs font-semibold text-muted-foreground">{issue.id}</p>
-				<Sheet.Title class="font-heading text-xl font-bold tracking-tight">
-					Issue Details
-				</Sheet.Title>
+				<p class="text-xs font-semibold text-muted-foreground">{issue.reference}</p>
+				<Sheet.Title class="font-heading text-xl font-bold tracking-tight"
+					>Issue Details</Sheet.Title
+				>
 			</div>
 
-			<!-- Scrollable body -->
 			<div class="flex-1 space-y-5 overflow-y-auto p-5">
 				<div class="space-y-3">
 					<span
@@ -399,20 +355,37 @@
 					<h2 class="font-heading text-2xl font-bold tracking-tight">{issue.title}</h2>
 				</div>
 
-				<!-- Photo -->
-				<div class="relative">
-					<img src={issue.image} alt="" class="h-48 w-full object-cover" />
-					{#if issue.verified}
-						<span
-							class="absolute bottom-2 right-2 flex items-center gap-1 bg-background/90 px-2 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur"
-						>
-							<HugeiconsIcon icon={CheckmarkBadge01Icon} class="size-3.5 text-primary" />
-							Verified Photo
-						</span>
-					{/if}
-				</div>
+				{#if issue.photos.length}
+					<div class="space-y-2">
+						<img
+							src={issue.photos[activePhoto]}
+							alt="Photo {activePhoto + 1} of {issue.reference}"
+							class="h-48 w-full object-cover"
+						/>
+						{#if issue.photos.length > 1}
+							<div class="flex gap-2">
+								{#each issue.photos as url, i (url)}
+									<button
+										type="button"
+										aria-label="Show photo {i + 1}"
+										class="size-14 border {i === activePhoto ? 'ring-2 ring-primary' : ''}"
+										onclick={() => (activePhoto = i)}
+									>
+										<img src={url} alt="" class="size-full object-cover" />
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				{:else}
+					<div
+						class="flex h-48 flex-col items-center justify-center gap-2 bg-muted text-sm text-muted-foreground"
+					>
+						<HugeiconsIcon icon={Image01Icon} strokeWidth={2} class="size-8" />
+						No photos attached
+					</div>
+				{/if}
 
-				<!-- Category + Submitted -->
 				<div class="grid grid-cols-2 gap-4">
 					<div class="border bg-background p-3">
 						<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -424,22 +397,22 @@
 						<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
 							Submitted
 						</p>
-						<p class="mt-1 font-medium">{issue.updatedAt}</p>
+						<p class="mt-1 font-medium">{issue.submittedAgo}</p>
+						<p class="text-xs text-muted-foreground">{issue.submittedOn}</p>
 					</div>
 				</div>
 
-				<!-- Location -->
 				<div class="border bg-background p-3">
-					<div class="flex items-center justify-between gap-2">
-						<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-							Location
-						</p>
-					</div>
+					<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Location</p>
 					<div class="mt-2 flex items-start gap-2">
 						<HugeiconsIcon icon={Location01Icon} class="mt-0.5 size-4 shrink-0 text-primary" />
-						<div>
-							<p class="font-medium">{issue.location}</p>
-							<p class="text-sm text-muted-foreground">Corner intersection at Lincoln Blvd</p>
+						<div class="min-w-0">
+							<p class="font-medium">{street(issue)}</p>
+							{#if issue.address?.includes(',')}
+								<p class="text-sm text-muted-foreground">
+									{issue.address.slice(issue.address.indexOf(',') + 1).trim()}
+								</p>
+							{/if}
 						</div>
 					</div>
 					<img
@@ -450,22 +423,35 @@
 					/>
 				</div>
 
-				<!-- Description -->
 				<div>
 					<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
 						Description
 					</p>
-					<p class="mt-2 text-sm leading-relaxed text-muted-foreground">{issue.description}</p>
+					<p class="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+						{issue.description}
+					</p>
 				</div>
-			</div>
 
-			<!-- Footer action -->
-			<Sheet.Footer class="shrink-0 border-t p-4">
-				<Button class="w-full gap-2">
-					<HugeiconsIcon icon={ThumbsUpIcon} strokeWidth={2} />
-					I have this issue too
-				</Button>
-			</Sheet.Footer>
+				{#if issue.updates.length}
+					<div>
+						<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Updates</p>
+						<ol class="mt-3 space-y-4 border-l pl-5">
+							{#each issue.updates as update (update.id)}
+								<li class="relative">
+									<span
+										class="absolute top-1.5 -left-[25px] size-2.5 rounded-full bg-primary ring-4 ring-background"
+									></span>
+									<p class="text-sm font-medium">{update.label}</p>
+									<p class="text-xs text-muted-foreground">{update.date}</p>
+									{#if update.body}
+										<p class="mt-1 text-sm italic text-muted-foreground">"{update.body}"</p>
+									{/if}
+								</li>
+							{/each}
+						</ol>
+					</div>
+				{/if}
+			</div>
 		{/if}
 	</Sheet.Content>
 </Sheet.Root>
