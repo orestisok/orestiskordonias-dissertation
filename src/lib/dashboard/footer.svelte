@@ -24,7 +24,13 @@
 		<!-- Right side: contact and other info -->
 		<nav class="flex flex-col gap-6 px-4 md:flex-row md:gap-6 md:px-6">
 			<a href={resolve('/')} class={linkClass()}> Contact Us </a>
-			<a href={resolve('/')} class={linkClass()}> Privacy Policy </a>
+			<a
+				href={resolve('/privacy')}
+				class={linkClass('/privacy')}
+				aria-current={isActive('/privacy') ? 'page' : undefined}
+			>
+				Privacy Policy
+			</a>
 			<a
 				href={resolve('/terms')}
 				class={linkClass('/terms')}
