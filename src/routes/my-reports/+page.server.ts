@@ -43,7 +43,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			},
 			events: {
 				columns: { body: true },
-				where: (e, { and, eq, isNotNull }) => and(eq(e.isPublic, true), isNotNull(e.body)),
+				where: (e, { and, eq, ne, isNotNull }) =>
+					and(eq(e.isPublic, true), isNotNull(e.body), ne(e.type, 'edit')),
 				orderBy: (e, { desc }) => [desc(e.createdAt)],
 				limit: 1
 			}
@@ -53,6 +54,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		reports: rows.map((r) => ({
 			id: r.id,
+			referenceNumber: r.referenceNumber,
 			reference: `RN-${r.referenceNumber}`,
 			title: r.title,
 			status: r.status,

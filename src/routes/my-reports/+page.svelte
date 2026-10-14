@@ -5,25 +5,12 @@
 	import * as ToggleGroup from '$lib/components/ui/toggle-group/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { PlusSignIcon, PencilEdit02Icon, Image01Icon } from '@hugeicons/core-free-icons';
+	import { statusMeta } from '$lib/reports';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
 	type ReportStatus = (typeof data.reports)[number]['status'];
-
-	interface StatusMeta {
-		label: string;
-		badge: string;
-		stage: number;
-	}
-
-	const statusMeta: Record<ReportStatus, StatusMeta> = {
-		submitted: { label: 'Submitted', badge: 'bg-sky-100 text-sky-700', stage: 1 },
-		acknowledged: { label: 'Acknowledged', badge: 'bg-primary/10 text-primary', stage: 2 },
-		in_progress: { label: 'In Progress', badge: 'bg-amber-100 text-amber-700', stage: 3 },
-		resolved: { label: 'Resolved', badge: 'bg-emerald-100 text-emerald-700', stage: 4 },
-		rejected: { label: 'Rejected', badge: 'bg-destructive/10 text-destructive', stage: 0 }
-	};
 
 	let activeFilter = $state<'all' | ReportStatus>('all');
 
@@ -112,10 +99,17 @@
 								{statusMeta[report.status].label}
 							</span>
 							<span class="text-muted-foreground text-xs">{report.updatedAgo}</span>
-							<Button variant="outline" size="sm" class="ml-auto">
-								<HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
-								Edit
-							</Button>
+							{#if report.status === 'submitted'}
+								<Button
+									variant="outline"
+									size="sm"
+									class="ml-auto"
+									href="/my-reports/{report.referenceNumber}/edit"
+								>
+									<HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
+									Edit
+								</Button>
+							{/if}
 						</div>
 
 						<h2 class="font-heading mt-2 text-xl font-bold tracking-tight">{report.title}</h2>
