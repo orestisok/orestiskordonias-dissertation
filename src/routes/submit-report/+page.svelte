@@ -2,8 +2,9 @@
 	import { enhance } from '$app/forms';
 	import { pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
-	import { PUBLIC_MAPBOX_ACCESS_TOKEN } from '$env/static/public';
 	import { MAX_PHOTOS, PHOTO_TYPES, photoError } from '$lib/photos';
+	import { MAX_DESCRIPTION, MAX_TITLE, MIN_DESCRIPTION } from '$lib/reports';
+	import LocationPicker from '$lib/components/location-picker.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
@@ -17,22 +18,15 @@
 		ArrowDown01Icon,
 		Tick02Icon,
 		MapPinIcon,
-		LocateFixedIcon,
 		ImagePlusIcon,
 		Image01Icon,
 		LockIcon,
 		SendIcon,
-		Search01Icon,
 		Cancel01Icon
 	} from '@hugeicons/core-free-icons';
-	import mapboxgl from 'mapbox-gl';
-	import 'mapbox-gl/dist/mapbox-gl.css';
-	import { untrack } from 'svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
-
-	mapboxgl.accessToken = PUBLIC_MAPBOX_ACCESS_TOKEN;
 
 	const steps = [
 		{ n: 1, label: 'Issue Details', short: 'Details' },
@@ -45,11 +39,6 @@
 	function goToStep(step: number) {
 		pushState('', { step });
 	}
-
-	const MAX_TITLE = 120;
-	const MIN_DESCRIPTION = 20;
-	const MAX_DESCRIPTION = 2000;
-	const MAX_ADDRESS = 255;
 
 	let title = $state('');
 	let categoryId = $state<number | ''>('');
@@ -78,14 +67,9 @@
 		if (detailsValid) goToStep(2);
 	}
 
-	const defaultCenter: [number, number] = [22.9444, 40.6401];
-
 	let lng = $state<number | null>(null);
 	let lat = $state<number | null>(null);
 	let address = $state('');
-	let locating = $state(false);
-	let searching = $state(false);
-	let locationMessage = $state('');
 
 	let locationAttempted = $state(false);
 	const locationValid = $derived(lng !== null && lat !== null);
@@ -94,127 +78,6 @@
 			? 'Please choose a location on the map or use your location.'
 			: ''
 	);
-
-	let mapContainer = $state<HTMLDivElement>();
-	let map: mapboxgl.Map | undefined;
-	let marker: mapboxgl.Marker | undefined;
-	let geocodeRequest = 0;
-
-	$effect(() => {
-		const container = mapContainer;
-		if (!container) return;
-
-		untrack(() => {
-			const pin: [number, number] | null = lng !== null && lat !== null ? [lng, lat] : null;
-			map = new mapboxgl.Map({ container, center: pin ?? defaultCenter, zoom: pin ? 16 : 13 });
-			map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-			map.on('click', (e) => placePin(e.lngLat.toArray()));
-			if (pin) showMarker(pin);
-		});
-
-		return () => {
-			map?.remove();
-			map = undefined;
-			marker = undefined;
-		};
-	});
-
-	function showMarker(pin: [number, number]) {
-		if (!map) return;
-		if (!marker) {
-			const m = new mapboxgl.Marker({ draggable: true }).setLngLat(pin).addTo(map);
-			m.on('dragend', () => placePin(m.getLngLat().toArray()));
-			marker = m;
-		}
-		marker.setLngLat(pin);
-	}
-
-	function placePin(pin: [number, number], { lookup = true, fly = false } = {}) {
-		[lng, lat] = pin;
-		locationMessage = '';
-		showMarker(pin);
-		if (fly) map?.flyTo({ center: pin, zoom: Math.max(map.getZoom(), 16) });
-
-		const request = ++geocodeRequest;
-		if (lookup) void reverseGeocode(pin, request);
-	}
-
-	interface GeocodeFeature {
-		geometry: { coordinates: [number, number] };
-		properties: { name: string; full_address?: string };
-	}
-
-	async function geocode(endpoint: 'forward' | 'reverse', params: Record<string, string>) {
-		const url = new URL(`https://api.mapbox.com/search/geocode/v6/${endpoint}`);
-		for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
-		url.searchParams.set('access_token', PUBLIC_MAPBOX_ACCESS_TOKEN);
-
-		const res = await fetch(url);
-		if (!res.ok) throw new Error(`Geocoding failed with ${res.status}`);
-		const body: { features: GeocodeFeature[] } = await res.json();
-		return body.features[0] as GeocodeFeature | undefined;
-	}
-
-	function addressOf(feature: GeocodeFeature) {
-		return (feature.properties.full_address ?? feature.properties.name).slice(0, MAX_ADDRESS);
-	}
-
-	async function reverseGeocode([lon, la]: [number, number], request: number) {
-		const feature = await geocode('reverse', {
-			longitude: String(lon),
-			latitude: String(la)
-		}).catch(() => undefined);
-		if (feature && request === geocodeRequest) address = addressOf(feature);
-	}
-
-	async function findAddress() {
-		const query = address.trim();
-		if (!query || searching) return;
-
-		searching = true;
-		locationMessage = '';
-		try {
-			const center = map?.getCenter().toArray() ?? defaultCenter;
-			const feature = await geocode('forward', {
-				q: query,
-				proximity: center.join(','),
-				limit: '1'
-			});
-			if (feature) {
-				placePin(feature.geometry.coordinates, { lookup: false, fly: true });
-				address = addressOf(feature);
-			} else {
-				locationMessage = 'No match for that address. Place the pin on the map instead.';
-			}
-		} catch {
-			locationMessage = 'Address search is unavailable. Place the pin on the map instead.';
-		} finally {
-			searching = false;
-		}
-	}
-
-	function useMyLocation() {
-		if (!('geolocation' in navigator)) {
-			locationMessage = "Your browser can't share its location. Place the pin on the map instead.";
-			return;
-		}
-
-		locating = true;
-		navigator.geolocation.getCurrentPosition(
-			(position) => {
-				locating = false;
-				placePin([position.coords.longitude, position.coords.latitude], { fly: true });
-			},
-			(err) => {
-				locating = false;
-				locationMessage =
-					err.code === err.PERMISSION_DENIED
-						? 'Location access was denied. Place the pin on the map instead.'
-						: "Couldn't get your location. Place the pin on the map instead.";
-			},
-			{ enableHighAccuracy: true, timeout: 10_000 }
-		);
-	}
 
 	let photos = $state<{ file: File; url: string }[]>([]);
 	let photoErrors = $state<string[]>([]);
@@ -455,51 +318,7 @@
 					<div class="grid gap-6 md:grid-cols-2">
 						<div class="flex flex-col gap-2">
 							<p class="text-xs font-semibold tracking-wide uppercase">Geolocation</p>
-							<div
-								class="bg-muted relative aspect-4/3 border {locationError
-									? 'border-destructive'
-									: ''}"
-							>
-								<div bind:this={mapContainer} class="size-full"></div>
-								<Button
-									variant="outline"
-									size="sm"
-									class="bg-background absolute top-2 left-2"
-									disabled={locating}
-									onclick={useMyLocation}
-								>
-									<HugeiconsIcon icon={LocateFixedIcon} strokeWidth={2} />
-									{locating ? 'Locating…' : 'Use My Location'}
-								</Button>
-							</div>
-							<form
-								class="flex gap-2"
-								onsubmit={(e) => {
-									e.preventDefault();
-									findAddress();
-								}}
-							>
-								<Input
-									bind:value={address}
-									maxlength={MAX_ADDRESS}
-									aria-label="Address"
-									placeholder="Enter address manually..."
-									class="bg-muted/40 border px-3"
-								/>
-								<Button type="submit" variant="outline" disabled={searching || !address.trim()}>
-									<HugeiconsIcon icon={Search01Icon} strokeWidth={2} />
-									{searching ? 'Finding…' : 'Find'}
-								</Button>
-							</form>
-							{#if locationError || locationMessage}
-								<p class="text-destructive text-xs" role="alert">
-									{locationError || locationMessage}
-								</p>
-							{:else}
-								<p class="text-muted-foreground text-xs">
-									Click the map or drag the pin to mark the exact spot.
-								</p>
-							{/if}
+							<LocationPicker bind:lng bind:lat bind:address error={locationError} />
 						</div>
 
 						<div class="flex flex-col gap-2">

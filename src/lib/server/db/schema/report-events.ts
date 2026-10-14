@@ -16,7 +16,8 @@ import { reports, reportStatus } from './reports';
 export const reportEventType = pgEnum('report_event_type', [
 	'status_change',
 	'comment',
-	'assignment'
+	'assignment',
+	'edit'
 ]);
 
 // The report timeline. The quoted staff note on a report card is the latest public event.

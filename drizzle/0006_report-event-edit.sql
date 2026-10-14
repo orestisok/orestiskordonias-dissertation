@@ -1,0 +1,1 @@
+ALTER TYPE "public"."report_event_type" ADD VALUE 'edit';

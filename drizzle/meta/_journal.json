@@ -43,6 +43,13 @@
       "when": 1790777130492,
       "tag": "0005_report-photos",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791821418214,
+      "tag": "0006_report-event-edit",
+      "breakpoints": true
     }
   ]
 }
