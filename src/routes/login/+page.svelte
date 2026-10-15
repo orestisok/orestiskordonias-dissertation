@@ -10,7 +10,7 @@
 	import AuthPages from '$lib/components/auth-pages.svelte';
 	import type { PageProps } from './$types';
 
-	let { form }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 
 	//state
 	let submitting = $state(false);
@@ -70,8 +70,10 @@
 						</div>
 					</div>
 				</div>
-				{#if form?.message}
-					<p class="mt-4 text-sm text-destructive" role="alert">{form.message}</p>
+				{#if form?.message ?? data.linkError}
+					<p class="mt-4 text-sm text-destructive" role="alert">
+						{form?.message ?? data.linkError}
+					</p>
 				{/if}
 			</Card.Content>
 			<Card.Footer class="flex-col">

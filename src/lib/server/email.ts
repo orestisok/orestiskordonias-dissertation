@@ -19,3 +19,23 @@ export async function sendEmail({ to, subject, text, html }: Email) {
 	const { transporter, from } = smtp();
 	await transporter.sendMail({ from, to, subject, text, html });
 }
+
+const escapeHtml = (value: string) =>
+	value
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+		.replaceAll("'", '&#39;');
+
+export function verificationEmail(to: string, name: string, url: string): Email {
+	return {
+		to,
+		subject: 'Verify your CivicScan email',
+		text: `Hi ${name},\n\nConfirm your email address to finish creating your CivicScan account:\n${url}\n\nIf you didn't create an account, you can ignore this email.`,
+		html: `<p>Hi ${escapeHtml(name)},</p>
+<p>Confirm your email address to finish creating your CivicScan account:</p>
+<p><a href="${escapeHtml(url)}">Verify email address</a></p>
+<p>If you didn't create an account, you can ignore this email.</p>`
+	};
+}
