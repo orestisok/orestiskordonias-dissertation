@@ -28,14 +28,49 @@ const escapeHtml = (value: string) =>
 		.replaceAll('"', '&quot;')
 		.replaceAll("'", '&#39;');
 
-export function verificationEmail(to: string, name: string, url: string): Email {
+type LinkEmail = {
+	to: string;
+	name: string;
+	subject: string;
+	intro: string;
+	action: string;
+	url: string;
+	outro: string;
+};
+
+function linkEmail({ to, name, subject, intro, action, url, outro }: LinkEmail): Email {
 	return {
 		to,
-		subject: 'Verify your CivicScan email',
-		text: `Hi ${name},\n\nConfirm your email address to finish creating your CivicScan account:\n${url}\n\nIf you didn't create an account, you can ignore this email.`,
+		subject,
+		text: `Hi ${name},\n\n${intro}\n${url}\n\n${outro}`,
 		html: `<p>Hi ${escapeHtml(name)},</p>
-<p>Confirm your email address to finish creating your CivicScan account:</p>
-<p><a href="${escapeHtml(url)}">Verify email address</a></p>
-<p>If you didn't create an account, you can ignore this email.</p>`
+<p>${escapeHtml(intro)}</p>
+<p><a href="${escapeHtml(url)}">${escapeHtml(action)}</a></p>
+<p>${escapeHtml(outro)}</p>`
 	};
+}
+
+export function verificationEmail(to: string, name: string, url: string) {
+	return linkEmail({
+		to,
+		name,
+		url,
+		subject: 'Verify your CivicScan email',
+		intro: 'Confirm your email address to finish creating your CivicScan account:',
+		action: 'Verify email address',
+		outro: "If you didn't create an account, you can ignore this email."
+	});
+}
+
+export function resetPasswordEmail(to: string, name: string, url: string) {
+	return linkEmail({
+		to,
+		name,
+		url,
+		subject: 'Reset your CivicScan password',
+		intro: 'We received a request to reset your password. Choose a new one here:',
+		action: 'Reset password',
+		outro:
+			"The link expires in one hour and works once. If you didn't ask for this, you can ignore this email and your password stays the same."
+	});
 }

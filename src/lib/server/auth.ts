@@ -4,14 +4,26 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
-import { sendEmail, verificationEmail } from '$lib/server/email';
+import { resetPasswordEmail, sendEmail, verificationEmail } from '$lib/server/email';
 import type { UserRole } from '$lib/server/db/schema';
+
+export const MIN_PASSWORD_LENGTH = 8;
 
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
 	database: drizzleAdapter(db, { provider: 'pg' }),
-	emailAndPassword: { enabled: true, requireEmailVerification: true },
+	emailAndPassword: {
+		enabled: true,
+		requireEmailVerification: true,
+		minPasswordLength: MIN_PASSWORD_LENGTH,
+		revokeSessionsOnPasswordReset: true,
+		sendResetPassword: async ({ user, url }) => {
+			sendEmail(resetPasswordEmail(user.email, user.name, url)).catch((error) =>
+				console.error('Failed to send password reset email', error)
+			);
+		}
+	},
 	emailVerification: {
 		sendOnSignUp: true,
 		sendOnSignIn: true,
