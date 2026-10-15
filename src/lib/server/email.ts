@@ -62,6 +62,36 @@ export function verificationEmail(to: string, name: string, url: string) {
 	});
 }
 
+export function changeEmailConfirmationEmail(
+	to: string,
+	name: string,
+	newEmail: string,
+	url: string
+) {
+	return linkEmail({
+		to,
+		name,
+		url,
+		subject: 'Approve your CivicScan email change',
+		intro: `We received a request to change your CivicScan email to ${newEmail}. Approve it here and we'll send a confirmation link to the new address:`,
+		action: 'Approve email change',
+		outro:
+			"The link expires in one hour. If you didn't ask for this, ignore this email and change your password."
+	});
+}
+
+export function newEmailVerificationEmail(to: string, name: string, url: string) {
+	return linkEmail({
+		to,
+		name,
+		url,
+		subject: 'Confirm your new CivicScan email',
+		intro: 'Confirm this address to finish changing the email on your CivicScan account:',
+		action: 'Confirm new email',
+		outro: "The link expires in one hour. If you didn't ask for this, you can ignore this email."
+	});
+}
+
 export function resetPasswordEmail(to: string, name: string, url: string) {
 	return linkEmail({
 		to,

@@ -66,7 +66,7 @@
 		{
 			icon: Delete02Icon,
 			label: 'Erasure',
-			text: 'Request deletion of your account. Reports already submitted remain part of the public works record but are permanently detached from your identity.'
+			text: 'Delete your account at any time from Account Settings. Reports staff have not yet reviewed are deleted along with their photos; reports already being handled remain part of the public works record but are permanently detached from your identity.'
 		}
 	];
 </script>
