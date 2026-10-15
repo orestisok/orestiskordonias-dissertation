@@ -7,7 +7,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as Sheet from '$lib/components/ui/sheet';
-	import { Menu, CirclePlus, FileText, Map, Settings } from '@lucide/svelte';
+	import { Menu, CirclePlus, FileText, Map, Settings, LogOut } from '@lucide/svelte';
 
 	let open = $state(false);
 	const close = () => (open = false);
@@ -87,6 +87,16 @@
 				<Settings class="size-5" />
 				Account Settings
 			</a>
+
+			<form method="POST" action={resolve('/logout')}>
+				<button
+					type="submit"
+					class="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-accent"
+				>
+					<LogOut class="size-5" />
+					Sign out
+				</button>
+			</form>
 		</nav>
 
 		<!-- Footer -->

@@ -82,7 +82,13 @@
 					{/snippet}
 				</DropdownMenu.Item>
 				<DropdownMenu.Separator />
-				<DropdownMenu.Item>Sign out</DropdownMenu.Item>
+				<form method="POST" action={resolve('/logout')}>
+					<DropdownMenu.Item class="w-full">
+						{#snippet child({ props })}
+							<button {...props} type="submit">Sign out</button>
+						{/snippet}
+					</DropdownMenu.Item>
+				</form>
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
 	</div>
