@@ -38,7 +38,13 @@
 			>
 				Terms of Service
 			</a>
-			<a href={resolve('/')} class={linkClass()}> Accessibility </a>
+			<a
+				href={resolve('/about')}
+				class={linkClass('/about')}
+				aria-current={isActive('/about') ? 'page' : undefined}
+			>
+				About Us
+			</a>
 		</nav>
 	</div>
 </footer>
