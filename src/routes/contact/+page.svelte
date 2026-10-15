@@ -113,7 +113,6 @@
 							<div class="bg-background flex flex-col gap-0.5 border p-4 text-sm">
 								<dt class="text-primary text-xs font-semibold">{detail.label}</dt>
 								<dd class="text-foreground font-semibold">{detail.value}</dd>
-								<dd class="text-xs">{detail.note}</dd>
 							</div>
 						{/each}
 					</dl>
