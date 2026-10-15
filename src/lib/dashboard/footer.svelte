@@ -4,11 +4,8 @@
 	import { isActive } from '$lib/dashboard/nav';
 	import type { RouteId } from '$app/types';
 
-	const linkClass = (route?: RouteId) =>
-		cn(
-			'transition-colors',
-			route && isActive(route) ? 'font-semibold text-primary' : 'hover:text-primary'
-		);
+	const linkClass = (route: RouteId) =>
+		cn('transition-colors', isActive(route) ? 'font-semibold text-primary' : 'hover:text-primary');
 </script>
 
 <footer>
@@ -23,7 +20,13 @@
 
 		<!-- Right side: contact and other info -->
 		<nav class="flex flex-col gap-6 px-4 md:flex-row md:gap-6 md:px-6">
-			<a href={resolve('/')} class={linkClass()}> Contact Us </a>
+			<a
+				href={resolve('/contact')}
+				class={linkClass('/contact')}
+				aria-current={isActive('/contact') ? 'page' : undefined}
+			>
+				Contact Us
+			</a>
 			<a
 				href={resolve('/privacy')}
 				class={linkClass('/privacy')}
