@@ -4,7 +4,15 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
-import { resetPasswordEmail, sendEmail, verificationEmail } from '$lib/server/email';
+import { APIError } from 'better-auth/api';
+import { deleteUnreviewedReports } from '$lib/server/account';
+import {
+	changeEmailConfirmationEmail,
+	newEmailVerificationEmail,
+	resetPasswordEmail,
+	sendEmail,
+	verificationEmail
+} from '$lib/server/email';
 import type { UserRole } from '$lib/server/db/schema';
 
 export const MIN_PASSWORD_LENGTH = 8;
@@ -29,13 +37,29 @@ export const auth = betterAuth({
 		sendOnSignIn: true,
 		autoSignInAfterVerification: true,
 		sendVerificationEmail: async ({ user, url }) => {
-			await sendEmail(verificationEmail(user.email, user.name, url));
+			const email = user.emailVerified ? newEmailVerificationEmail : verificationEmail;
+			await sendEmail(email(user.email, user.name, url));
 		}
 	},
 	user: {
 		additionalFields: {
 			// input: false so users can't make themselves staff on signup
 			role: { type: ['citizen', 'staff'], required: true, defaultValue: 'citizen', input: false }
+		},
+		changeEmail: {
+			enabled: true,
+			sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
+				await sendEmail(changeEmailConfirmationEmail(user.email, user.name, newEmail, url));
+			}
+		},
+		deleteUser: {
+			enabled: true,
+			beforeDelete: async (user) => {
+				if ('role' in user && user.role === 'staff') {
+					throw new APIError('FORBIDDEN', { message: "Staff accounts can't be deleted here." });
+				}
+				await deleteUnreviewedReports(user.id);
+			}
 		}
 	},
 	plugins: [

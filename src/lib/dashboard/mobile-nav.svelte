@@ -2,7 +2,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { cn } from '$lib/utils.js';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { UserIcon } from '@hugeicons/core-free-icons';
 	import { isActive } from '$lib/dashboard/nav';
+	import { page } from '$app/state';
 	import type { RouteId } from '$app/types';
 	import { Button } from '$lib/components/ui/button';
 	import * as Avatar from '$lib/components/ui/avatar';
@@ -36,11 +39,13 @@
 		<!-- Profile  -->
 		<div class="flex items-center gap-3 border-b px-4 pb-4">
 			<Avatar.Root class="size-11">
-				<Avatar.Fallback class="bg-primary/10 text-primary">OW</Avatar.Fallback>
+				<Avatar.Fallback class="bg-primary/10 text-primary">
+					<HugeiconsIcon icon={UserIcon} strokeWidth={2} class="size-6" />
+				</Avatar.Fallback>
 			</Avatar.Root>
 			<div class="min-w-0">
-				<p class="truncate font-semibold">Mpampis Alexiou</p>
-				<p class="truncate text-sm text-muted-foreground">mpampisalexiou@gmail.com</p>
+				<p class="truncate font-semibold">{page.data.user?.name}</p>
+				<p class="truncate text-sm text-muted-foreground">{page.data.user?.email}</p>
 			</div>
 		</div>
 

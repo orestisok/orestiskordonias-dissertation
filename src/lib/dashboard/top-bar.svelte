@@ -6,7 +6,10 @@
 	import { Bell } from '@lucide/svelte';
 	import MobileNav from '$lib/dashboard/mobile-nav.svelte';
 	import { cn } from '$lib/utils.js';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { UserIcon } from '@hugeicons/core-free-icons';
 	import { isActive } from '$lib/dashboard/nav';
+	import { page } from '$app/state';
 	import type { RouteId } from '$app/types';
 
 	const linkClass = (route: RouteId) =>
@@ -63,13 +66,16 @@
 			>
 				<Avatar.Root class="size-9">
 					<Avatar.Image src="" alt="" />
-					<Avatar.Fallback>OW</Avatar.Fallback>
+					<Avatar.Fallback>
+						<HugeiconsIcon icon={UserIcon} strokeWidth={2} class="size-5" />
+					</Avatar.Fallback>
 				</Avatar.Root>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content align="end" class="w-48">
-				<DropdownMenu.Label>My account</DropdownMenu.Label>
+				<DropdownMenu.Label class="truncate">
+					{page.data.user?.name ?? 'My account'}
+				</DropdownMenu.Label>
 				<DropdownMenu.Separator />
-				<DropdownMenu.Item>Profile</DropdownMenu.Item>
 				<DropdownMenu.Item class={isActive('/settings') ? 'text-primary' : undefined}>
 					{#snippet child({ props })}
 						<a
