@@ -1,9 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { APIError } from 'better-auth/api';
-import { auth, homePathFor } from '$lib/server/auth';
+import { auth, homePathFor, MIN_PASSWORD_LENGTH } from '$lib/server/auth';
 import type { Actions, PageServerLoad } from './$types';
-
-const MIN_PASSWORD_LENGTH = 8;
 
 export const load: PageServerLoad = ({ locals }) => {
 	if (locals.user) redirect(303, homePathFor(locals.user.role));

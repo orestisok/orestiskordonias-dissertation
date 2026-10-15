@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	//components
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -81,7 +82,7 @@
 					{submitting ? 'Logging in…' : 'Log In'}
 				</Button>
 				<a
-					href="##"
+					href={resolve('/forgot-password')}
 					class="inline-block text-sm underline-offset-4 hover:underline text-primary/80 pt-3"
 				>
 					Forgot your password?
