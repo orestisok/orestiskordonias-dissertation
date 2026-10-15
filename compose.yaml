@@ -12,5 +12,11 @@ services:
       - pgdata:/var/lib/postgresql/data
       # Skip the image's auto-install of postgis/tiger/topology; migrations enable postgis (like Supabase)
       - /dev/null:/docker-entrypoint-initdb.d/10_postgis.sh:ro
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: always
+    ports:
+      - 1025:1025
+      - 8025:8025
 volumes:
   pgdata:
