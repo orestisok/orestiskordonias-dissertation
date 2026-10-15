@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Search, Bell } from '@lucide/svelte';
+	import { Bell } from '@lucide/svelte';
 	import MobileNav from '$lib/dashboard/mobile-nav.svelte';
 	import { cn } from '$lib/utils.js';
 	import { isActive } from '$lib/dashboard/nav';
@@ -49,15 +48,8 @@
 		</nav>
 	</div>
 
-	<!-- Right side: search + notifications + account -->
+	<!-- Right side: notifications + account -->
 	<div class="flex items-center gap-2">
-		<div class="relative hidden sm:block">
-			<Search
-				class="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-			/>
-			<Input type="search" placeholder="Search reports..." class="w-40 pl-8 md:w-40 lg:w-56" />
-		</div>
-
 		<Button variant="ghost" size="icon" aria-label="Notifications" class="relative">
 			<Bell class="size-5" />
 			<!-- absolute position for red dot -->
