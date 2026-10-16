@@ -1,3 +1,4 @@
+import { redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { betterAuth } from 'better-auth/minimal';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -67,7 +68,13 @@ export const auth = betterAuth({
 	]
 });
 
-// Where each role lands after logging in. /dashboard is a placeholder for now.
+// Where each role lands after logging in.
 export function homePathFor(role: UserRole) {
 	return role === 'staff' ? '/dashboard' : '/my-reports';
+}
+
+export function requireStaff(locals: App.Locals) {
+	if (!locals.user) redirect(303, '/login');
+	if (locals.user.role !== 'staff') redirect(303, homePathFor(locals.user.role));
+	return locals.user;
 }
