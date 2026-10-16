@@ -56,7 +56,7 @@
 			</Sheet.Content>
 		</Sheet.Root>
 
-		<h1 class="font-heading text-base font-semibold">{staffTitle()}</h1>
+		<h1 class="font-heading text-base font-semibold">{page.data.pageTitle ?? staffTitle()}</h1>
 	</div>
 
 	<div class="flex min-w-0 items-center gap-2.5">

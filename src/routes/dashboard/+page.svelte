@@ -137,7 +137,14 @@
 						{#each data.recent as report (report.id)}
 							<tr class="border-t">
 								<td class="px-5 py-3 font-semibold whitespace-nowrap text-primary">
-									{report.reference}
+									<a
+										href={resolve('/dashboard/queue/[reference]', {
+											reference: String(report.referenceNumber)
+										})}
+										class="hover:underline"
+									>
+										{report.reference}
+									</a>
 								</td>
 								<td class="max-w-64 truncate px-5 py-3" title={report.title}>{report.title}</td>
 								<td class="px-5 py-3 whitespace-nowrap">{report.category}</td>

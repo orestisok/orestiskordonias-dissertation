@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm';
 import { user, userRole } from './auth';
 import { categories } from './categories';
+import { departments } from './departments';
 import { reportEvents } from './report-events';
 import { reportPhotos } from './report-photos';
 import { reports } from './reports';
@@ -24,8 +25,16 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
 	reports: many(reports)
 }));
 
+export const departmentsRelations = relations(departments, ({ many }) => ({
+	reports: many(reports)
+}));
+
 export const reportsRelations = relations(reports, ({ one, many }) => ({
 	category: one(categories, { fields: [reports.categoryId], references: [categories.id] }),
+	department: one(departments, {
+		fields: [reports.departmentId],
+		references: [departments.id]
+	}),
 	reporter: one(user, {
 		fields: [reports.reporterId],
 		references: [user.id],

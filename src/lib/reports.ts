@@ -35,3 +35,5 @@ export const statusMeta: Record<
 		color: '#dc2626'
 	}
 };
+
+export const STATUSES = Object.keys(statusMeta) as ReportStatus[];

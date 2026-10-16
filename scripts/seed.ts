@@ -1,4 +1,4 @@
-// Seeds the LOCAL database: categories, a staff and a citizen account, and sample
+// Seeds the LOCAL database: categories, departments, a staff and a citizen account, and sample
 // reports around Thessaloniki. Safe to rerun. Usage: npm run db:seed
 import { hashPassword } from 'better-auth/crypto';
 import { count, eq } from 'drizzle-orm';
@@ -32,6 +32,14 @@ const CATEGORIES = [
 	{ slug: 'damaged-signage', name: 'Damaged Signage' },
 	{ slug: 'water-drainage', name: 'Water / Drainage' },
 	{ slug: 'other', name: 'Other' }
+];
+
+const DEPARTMENTS = [
+	{ slug: 'public-works', name: 'Public Works' },
+	{ slug: 'sanitation', name: 'Sanitation' },
+	{ slug: 'water-utilities', name: 'Water & Utilities' },
+	{ slug: 'transportation', name: 'Transportation' },
+	{ slug: 'parks-recreation', name: 'Parks & Recreation' }
 ];
 
 const USERS: { email: string; name: string; role: UserRole; password: string }[] = [
@@ -194,6 +202,14 @@ try {
 				.onConflictDoUpdate({ target: schema.categories.slug, set: { name: c.name } });
 		}
 		console.log(`categories: ${CATEGORIES.length} upserted`);
+
+		for (const d of DEPARTMENTS) {
+			await tx
+				.insert(schema.departments)
+				.values(d)
+				.onConflictDoUpdate({ target: schema.departments.slug, set: { name: d.name } });
+		}
+		console.log(`departments: ${DEPARTMENTS.length} upserted`);
 
 		const userIds: Partial<Record<UserRole, string>> = {};
 		for (const u of USERS) {
