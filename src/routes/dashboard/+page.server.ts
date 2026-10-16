@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import { categories, reportEvents, reports, type ReportStatus } from '$lib/server/db/schema';
 import { requireStaff } from '$lib/server/auth';
 import { categoryColor, FALLBACK_CATEGORY_COLOR } from '$lib/categories';
+import { photoUrl } from '$lib/photos';
 import { formatDate } from '$lib/time';
 import type { PageServerLoad } from './$types';
 
@@ -39,7 +40,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 				title: true,
 				address: true,
 				location: true,
-				categoryId: true
+				status: true,
+				categoryId: true,
+				createdAt: true
+			},
+			with: {
+				category: { columns: { name: true } },
+				photos: {
+					columns: { objectKey: true },
+					orderBy: (p, { asc }) => [asc(p.position)],
+					limit: 1
+				}
 			}
 		}),
 		db.query.reports.findMany({
@@ -73,9 +84,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 		categories: categoryList,
 		points: openReports.map((r) => ({
 			id: r.id,
+			referenceNumber: r.referenceNumber,
 			reference: `RN-${r.referenceNumber}`,
 			title: r.title,
-			address: r.address,
+			address: r.address ?? `${r.location.y.toFixed(5)}, ${r.location.x.toFixed(5)}`,
+			status: r.status,
+			category: r.category.name,
+			submittedOn: formatDate(r.createdAt),
+			image: r.photos[0] ? photoUrl(r.photos[0].objectKey) : null,
 			lng: r.location.x,
 			lat: r.location.y,
 			color: categoryList.find((c) => c.id === r.categoryId)?.color ?? FALLBACK_CATEGORY_COLOR

@@ -2,11 +2,12 @@
 	import { resolve } from '$app/paths';
 	import * as Card from '$lib/components/ui/card';
 	import BarList from '$lib/staff/bar-list.svelte';
+	import ReportPopup from '$lib/staff/report-popup.svelte';
 	import { cn } from '$lib/utils.js';
 	import { statusMeta } from '$lib/reports';
 	import mapboxgl from 'mapbox-gl';
 	import 'mapbox-gl/dist/mapbox-gl.css';
-	import { onMount } from 'svelte';
+	import { mount, onMount, unmount } from 'svelte';
 	import { PUBLIC_MAPBOX_ACCESS_TOKEN } from '$env/static/public';
 	import type { PageProps } from './$types';
 
@@ -23,6 +24,7 @@
 
 	const defaultCenter: [number, number] = [22.9444, 40.6401];
 	let mapContainer: HTMLDivElement;
+	let selectedId = $state<string | null>(null);
 
 	onMount(() => {
 		const map = new mapboxgl.Map({
@@ -39,16 +41,47 @@
 			map.fitBounds(bounds, { padding: 60, maxZoom: 15, duration: 0 });
 		}
 
+		const popup = new mapboxgl.Popup({
+			offset: 28,
+			maxWidth: 'none',
+			className: 'staff-popup',
+			anchor: 'bottom',
+			focusAfterOpen: false
+		});
+		let content: ReturnType<typeof mount> | null = null;
+
+		const clearContent = () => {
+			if (content) unmount(content);
+			content = null;
+		};
+
+		popup.on('close', () => {
+			clearContent();
+			selectedId = null;
+		});
+
 		for (const point of data.points) {
 			const marker = new mapboxgl.Marker({ color: point.color, scale: 0.8 })
 				.setLngLat([point.lng, point.lat])
 				.addTo(map);
-			marker.getElement().title = [point.reference, point.title, point.address]
-				.filter(Boolean)
-				.join(' · ');
+			const element = marker.getElement();
+			element.title = `${point.reference} · ${point.title}`;
+			element.style.cursor = 'pointer';
+			element.addEventListener('click', (e) => {
+				e.stopPropagation();
+				popup.remove();
+				const target = document.createElement('div');
+				content = mount(ReportPopup, { target, props: { point } });
+				popup.setLngLat([point.lng, point.lat]).setDOMContent(target).addTo(map);
+				selectedId = point.id;
+				map.easeTo({ center: [point.lng, point.lat], offset: [0, 70] });
+			});
 		}
 
-		return () => map.remove();
+		return () => {
+			clearContent();
+			map.remove();
+		};
 	});
 </script>
 
@@ -127,7 +160,12 @@
 					</thead>
 					<tbody>
 						{#each data.recent as report (report.id)}
-							<tr class="border-t">
+							<tr
+								class={cn(
+									'border-t transition-colors',
+									report.id === selectedId && 'bg-primary/10 shadow-[inset_3px_0_0_var(--primary)]'
+								)}
+							>
 								<td class="px-5 py-3 font-semibold whitespace-nowrap text-primary">
 									<a
 										href={resolve('/dashboard/queue/[reference]', {
@@ -166,3 +204,19 @@
 		{/if}
 	</Card.Root>
 </main>
+
+<style>
+	:global(.staff-popup .mapboxgl-popup-content) {
+		padding: 0;
+		border-radius: 0;
+		overflow: hidden;
+	}
+
+	:global(.staff-popup .mapboxgl-popup-close-button) {
+		width: 1.5rem;
+		height: 1.5rem;
+		background: rgb(255 255 255 / 0.9);
+		font-size: 1rem;
+		line-height: 1;
+	}
+</style>
