@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import * as Card from '$lib/components/ui/card';
+	import BarList from '$lib/staff/bar-list.svelte';
 	import { cn } from '$lib/utils.js';
 	import { statusMeta } from '$lib/reports';
 	import mapboxgl from 'mapbox-gl';
@@ -19,8 +20,6 @@
 		{ label: 'In Progress', value: data.stats.inProgress, tone: 'text-primary' },
 		{ label: 'Resolved (30d)', value: data.stats.resolved30d, tone: 'text-emerald-700' }
 	]);
-
-	const maxCount = $derived(Math.max(0, ...data.categories.map((c) => c.count)));
 
 	const defaultCenter: [number, number] = [22.9444, 40.6401];
 	let mapContainer: HTMLDivElement;
@@ -87,23 +86,16 @@
 
 		<Card.Root size="sm" class="px-5">
 			<h2 class="text-sm font-semibold">By Category</h2>
-			<ul class="-mt-1 flex flex-col gap-4">
-				{#each data.categories as category (category.id)}
-					<li>
-						<div class="flex items-baseline justify-between gap-3 text-sm">
-							<span class="truncate">{category.name}</span>
-							<span class="font-semibold tabular-nums">{category.count}</span>
-						</div>
-						<div class="mt-1.5 h-1 bg-muted">
-							<div
-								class="h-full"
-								style:background-color={category.color}
-								style:width="{maxCount ? (category.count / maxCount) * 100 : 0}%"
-							></div>
-						</div>
-					</li>
-				{/each}
-			</ul>
+			<div class="-mt-1">
+				<BarList
+					bars={data.categories.map((c) => ({
+						key: c.id,
+						label: c.name,
+						count: c.count,
+						color: c.color
+					}))}
+				/>
+			</div>
 		</Card.Root>
 	</div>
 

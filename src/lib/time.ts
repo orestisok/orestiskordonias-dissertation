@@ -18,3 +18,15 @@ export function timeAgo(date: Date) {
 export function formatDate(date: Date) {
 	return absolute.format(date);
 }
+
+const dayMonth = new Intl.DateTimeFormat('en-US', {
+	day: 'numeric',
+	month: 'short',
+	timeZone: 'UTC'
+});
+
+export function formatDayMonth(isoDate: string) {
+	const parts = dayMonth.formatToParts(new Date(`${isoDate}T00:00:00Z`));
+	const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
+	return `${part('day')} ${part('month')}`;
+}
