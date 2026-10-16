@@ -14,6 +14,7 @@ declare global {
 		// interface PageData {}
 		interface PageState {
 			step?: number;
+			reject?: boolean;
 		}
 		// interface Platform {}
 	}

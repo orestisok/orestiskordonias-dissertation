@@ -82,6 +82,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		})),
 		recent: recentReports.map((r) => ({
 			id: r.id,
+			referenceNumber: r.referenceNumber,
 			reference: `RN-${r.referenceNumber}`,
 			title: r.title,
 			category: r.category.name,

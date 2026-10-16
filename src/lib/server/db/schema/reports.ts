@@ -13,6 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { user } from './auth';
 import { categories } from './categories';
+import { departments } from './departments';
 
 // Rejected is a terminal exit from any earlier state, not a step after resolved
 export const reportStatus = pgEnum('report_status', [
@@ -45,6 +46,9 @@ export const reports = pgTable(
 			.notNull()
 			.references(() => categories.id, { onDelete: 'restrict' }),
 		// Null after account deletion: the report survives, anonymised
+		departmentId: integer('department_id').references(() => departments.id, {
+			onDelete: 'restrict'
+		}),
 		reporterId: text('reporter_id').references(() => user.id, { onDelete: 'set null' }),
 		assignedToId: text('assigned_to_id').references(() => user.id, { onDelete: 'set null' }),
 		createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -57,6 +61,7 @@ export const reports = pgTable(
 		index('reports_location_idx').using('gist', table.location),
 		index('reports_status_idx').on(table.status),
 		index('reports_category_id_idx').on(table.categoryId),
+		index('reports_department_id_idx').on(table.departmentId),
 		index('reports_reporter_id_idx').on(table.reporterId),
 		index('reports_assigned_to_id_idx').on(table.assignedToId),
 		check('reports_title_not_blank', sql`btrim(${table.title}) <> ''`),
