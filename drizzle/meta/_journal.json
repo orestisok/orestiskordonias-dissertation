@@ -57,6 +57,13 @@
       "when": 1792155391932,
       "tag": "0007_departments",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792255445990,
+      "tag": "0008_notification-reads",
+      "breakpoints": true
     }
   ]
 }

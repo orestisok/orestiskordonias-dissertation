@@ -10,7 +10,23 @@
 	import { UserIcon } from '@hugeicons/core-free-icons';
 	import { isActive } from '$lib/dashboard/nav';
 	import { page } from '$app/state';
+	import { invalidate } from '$app/navigation';
+	import type { Notification } from '$lib/server/notifications';
 	import type { RouteId } from '$app/types';
+
+	const notifications = $derived(
+		page.data.notifications as { items: Notification[]; unreadCount: number } | null | undefined
+	);
+	let highlighted = $state(new Set<string>());
+
+	async function openNotifications(open: boolean) {
+		if (!open || !notifications) return;
+		highlighted = new Set(notifications.items.filter((n) => n.unread).map((n) => n.id));
+		if (!notifications.unreadCount) return;
+
+		const response = await fetch(resolve('/notifications/read'), { method: 'POST' });
+		if (response.ok) await invalidate('app:notifications');
+	}
 
 	const linkClass = (route: RouteId) =>
 		cn(
@@ -53,11 +69,72 @@
 
 	<!-- Right side: notifications + account -->
 	<div class="flex items-center gap-2">
-		<Button variant="ghost" size="icon" aria-label="Notifications" class="relative">
-			<Bell class="size-5" />
-			<!-- absolute position for red dot -->
-			<span class="absolute right-2 top-2 size-2 rounded-full bg-destructive"></span>
-		</Button>
+		{#if notifications}
+			<DropdownMenu.Root onOpenChange={openNotifications}>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<Button
+							{...props}
+							variant="ghost"
+							size="icon"
+							aria-label={notifications.unreadCount
+								? `Notifications, ${notifications.unreadCount} unread`
+								: 'Notifications'}
+							class="relative"
+						>
+							<Bell class="size-5" />
+							{#if notifications.unreadCount}
+								<span class="absolute right-2 top-2 size-2 rounded-full bg-destructive"></span>
+							{/if}
+						</Button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end" class="max-h-[28rem] w-80">
+					<DropdownMenu.Label>Notifications</DropdownMenu.Label>
+					<DropdownMenu.Separator />
+					{#each notifications.items as item (item.id)}
+						<DropdownMenu.Item
+							class={cn(
+								'flex-col items-start gap-1 text-sm font-normal tracking-normal normal-case',
+								highlighted.has(item.id) && 'bg-primary/5'
+							)}
+						>
+							{#snippet child({ props })}
+								<a {...props} href="{resolve('/my-reports')}#{item.reference}">
+									<span class="flex w-full items-start gap-2">
+										<span class="min-w-0 flex-1">
+											{#if item.kind === 'comment'}
+												New update on <strong>{item.reference}</strong>
+											{:else if item.kind === 'rejected'}
+												<strong>{item.reference}</strong> was rejected
+											{:else}
+												<strong>{item.reference}</strong> is now
+												<strong style:color={item.color}>{item.statusLabel}</strong>
+											{/if}
+										</span>
+										{#if highlighted.has(item.id)}
+											<span class="mt-1.5 size-2 shrink-0 rounded-full bg-primary"></span>
+										{/if}
+									</span>
+									{#if item.body}
+										<span class="text-muted-foreground line-clamp-2 w-full italic">
+											"{item.body}"
+										</span>
+									{/if}
+									<span class="text-muted-foreground w-full truncate text-xs">
+										{item.title} · {item.ago}
+									</span>
+								</a>
+							{/snippet}
+						</DropdownMenu.Item>
+					{:else}
+						<p class="text-muted-foreground px-3 py-6 text-center text-sm">
+							No updates on your reports yet.
+						</p>
+					{/each}
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		{/if}
 
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger
