@@ -72,7 +72,10 @@
 
 		<div class="mt-10 flex flex-col gap-4">
 			{#each visibleReports as report (report.id)}
-				<article class="bg-background flex flex-col gap-5 border p-4 sm:flex-row md:p-5">
+				<article
+					id={report.reference}
+					class="bg-background flex scroll-mt-6 flex-col gap-5 border p-4 sm:flex-row md:p-5"
+				>
 					{#if report.image}
 						<img
 							src={report.image}
