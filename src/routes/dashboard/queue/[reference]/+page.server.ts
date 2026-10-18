@@ -11,7 +11,7 @@ import {
 	parseStatus
 } from '$lib/server/staff-reports';
 import { photoUrl } from '$lib/photos';
-import { statusMeta } from '$lib/reports';
+import { isStaffEvent, STAFF_ATTRIBUTION, statusMeta } from '$lib/reports';
 import { formatDate } from '$lib/time';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -105,7 +105,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				label: eventLabel(e),
 				body: eventBody(e),
 				color: e.type === 'status_change' && e.toStatus ? statusMeta[e.toStatus].color : null,
-				actor: e.actor?.name ?? null,
+				actor: isStaffEvent(e)
+					? e.actor
+						? `${e.actor.name} · ${STAFF_ATTRIBUTION}`
+						: 'Former staff member'
+					: (e.actor?.name ?? null),
 				date: formatDate(e.createdAt)
 			}))
 		}

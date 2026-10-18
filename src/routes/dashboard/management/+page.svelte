@@ -244,8 +244,8 @@
 			<AlertDialog.Description>
 				{#if deleting}
 					<strong class="text-foreground">{deleting.name}</strong> ({deleting.email}) will no longer
-					be able to log in. This can't be undone. Reports and their history stay, without this
-					person's name.
+					be able to log in. This can't be undone. Their report updates stay, credited to "Former
+					staff member".
 				{/if}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
