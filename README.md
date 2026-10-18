@@ -41,6 +41,22 @@ npm run admin:create -- --email name@thessaloniki.gr --name "Full Name"
 
 The script asks for the password interactively. Pass `--yes` to write to a non-local database. Locally, `npm run db:seed` also creates `admin@example.com` with `SEED_ADMIN_PASSWORD`.
 
+## Installing as an app
+
+CivicScan is a progressive web app: browsers offer to install it from the address bar (Chrome, Edge) or via **Add to Home Screen** (iOS Safari, Android). Installation needs HTTPS in production; `localhost` is exempt. To test installation and offline behaviour locally, use the production build: `npm run build && npm run preview`.
+
+The service worker (`src/service-worker.ts`) caches the built JS/CSS and `static/` files. Pages and data always come from the network, and `static/offline.html` is shown when there is no connection.
+
+The icons in `static/icons/` are generated from `src/lib/assets/favicon.svg`. To regenerate them after changing the logo:
+
+```sh
+S=src/lib/assets/favicon.svg
+rsvg-convert -h 154 $S | magick - -background none -gravity center -extent 192x192 static/icons/icon-192.png
+rsvg-convert -h 410 $S | magick - -background none -gravity center -extent 512x512 static/icons/icon-512.png
+rsvg-convert -h 307 $S | magick - -background white -gravity center -extent 512x512 -alpha remove static/icons/icon-maskable-512.png
+rsvg-convert -h 135 $S | magick - -background white -gravity center -extent 180x180 -alpha remove static/icons/apple-touch-icon.png
+```
+
 ## Building
 
 To create a production version of your app:
