@@ -3,7 +3,7 @@ import { asc, eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { categories, type ReportEvent } from '$lib/server/db/schema';
 import { photoUrl } from '$lib/photos';
-import { statusMeta } from '$lib/reports';
+import { isStaffEvent, STAFF_ATTRIBUTION, statusMeta } from '$lib/reports';
 import { formatDate, timeAgo } from '$lib/time';
 import type { PageServerLoad } from './$types';
 
@@ -87,7 +87,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 				id: e.id,
 				label: updateLabel(e),
 				body: e.body,
-				date: formatDate(e.createdAt)
+				date: formatDate(e.createdAt),
+				author: isStaffEvent(e) ? STAFF_ATTRIBUTION : null
 			}))
 		}))
 	};

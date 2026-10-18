@@ -5,7 +5,7 @@
 	import * as ToggleGroup from '$lib/components/ui/toggle-group/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { PlusSignIcon, PencilEdit02Icon, Image01Icon } from '@hugeicons/core-free-icons';
-	import { statusMeta } from '$lib/reports';
+	import { STAFF_ATTRIBUTION, statusMeta } from '$lib/reports';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -136,6 +136,7 @@
 						{#if report.note}
 							<div class="bg-muted/50 border-primary mt-3 border-l-2 px-4 py-3">
 								<p class="text-muted-foreground text-sm italic">"{report.note}"</p>
+								<p class="text-muted-foreground mt-1 text-xs">— {STAFF_ATTRIBUTION}</p>
 							</div>
 						{/if}
 					</div>

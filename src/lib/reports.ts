@@ -1,4 +1,4 @@
-import type { ReportStatus } from '$lib/server/db/schema';
+import type { ReportEvent, ReportStatus } from '$lib/server/db/schema';
 
 export const MAX_TITLE = 120;
 export const MIN_DESCRIPTION = 20;
@@ -37,3 +37,9 @@ export const statusMeta: Record<
 };
 
 export const STATUSES = Object.keys(statusMeta) as ReportStatus[];
+
+export const STAFF_ATTRIBUTION = 'Municipal staff';
+
+export function isStaffEvent(event: Pick<ReportEvent, 'type' | 'fromStatus'>) {
+	return event.type === 'status_change' ? event.fromStatus !== null : event.type !== 'edit';
+}

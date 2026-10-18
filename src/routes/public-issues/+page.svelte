@@ -442,7 +442,9 @@
 										class="absolute top-1.5 -left-[25px] size-2.5 rounded-full bg-primary ring-4 ring-background"
 									></span>
 									<p class="text-sm font-medium">{update.label}</p>
-									<p class="text-xs text-muted-foreground">{update.date}</p>
+									<p class="text-xs text-muted-foreground">
+										{update.date}{update.author ? ` · ${update.author}` : ''}
+									</p>
 									{#if update.body}
 										<p class="mt-1 text-sm italic text-muted-foreground">"{update.body}"</p>
 									{/if}
