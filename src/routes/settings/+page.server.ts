@@ -1,6 +1,12 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { APIError } from 'better-auth/api';
-import { auth, MIN_PASSWORD_LENGTH } from '$lib/server/auth';
+import {
+	auth,
+	isStaffEmail,
+	isWorker,
+	MIN_PASSWORD_LENGTH,
+	STAFF_EMAIL_DOMAIN
+} from '$lib/server/auth';
 import type { Actions, PageServerLoad } from './$types';
 
 const MAX_NAME_LENGTH = 100;
@@ -22,7 +28,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
 	return {
 		name: locals.user.name,
 		email: locals.user.email,
-		isStaff: locals.user.role === 'staff',
+		isStaff: isWorker(locals.user.role),
 		emailNotice,
 		emailNoticeIsError: !!error
 	};
@@ -54,6 +60,12 @@ export const actions: Actions = {
 		}
 		if (newEmail === locals.user?.email) {
 			return fail(400, { section: 'email', message: "That's already your email address." });
+		}
+		if (locals.user && isWorker(locals.user.role) && !isStaffEmail(newEmail)) {
+			return fail(400, {
+				section: 'email',
+				message: `Staff accounts must use an @${STAFF_EMAIL_DOMAIN} email address.`
+			});
 		}
 
 		try {

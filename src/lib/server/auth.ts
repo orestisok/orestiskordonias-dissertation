@@ -45,7 +45,12 @@ export const auth = betterAuth({
 	user: {
 		additionalFields: {
 			// input: false so users can't make themselves staff on signup
-			role: { type: ['citizen', 'staff'], required: true, defaultValue: 'citizen', input: false }
+			role: {
+				type: ['citizen', 'staff', 'admin'],
+				required: true,
+				defaultValue: 'citizen',
+				input: false
+			}
 		},
 		changeEmail: {
 			enabled: true,
@@ -56,7 +61,7 @@ export const auth = betterAuth({
 		deleteUser: {
 			enabled: true,
 			beforeDelete: async (user) => {
-				if ('role' in user && user.role === 'staff') {
+				if ('role' in user && (user.role === 'staff' || user.role === 'admin')) {
 					throw new APIError('FORBIDDEN', { message: "Staff accounts can't be deleted here." });
 				}
 				await deleteUnreviewedReports(user.id);
@@ -69,12 +74,28 @@ export const auth = betterAuth({
 });
 
 // Where each role lands after logging in.
+export const STAFF_EMAIL_DOMAIN = 'thessaloniki.gr';
+
+export function isWorker(role: UserRole) {
+	return role === 'staff' || role === 'admin';
+}
+
+export function isStaffEmail(email: string) {
+	return /^[^@\s]+@thessaloniki\.gr$/.test(email);
+}
+
 export function homePathFor(role: UserRole) {
-	return role === 'staff' ? '/dashboard' : '/my-reports';
+	return isWorker(role) ? '/dashboard' : '/my-reports';
 }
 
 export function requireStaff(locals: App.Locals) {
 	if (!locals.user) redirect(303, '/login');
-	if (locals.user.role !== 'staff') redirect(303, homePathFor(locals.user.role));
+	if (!isWorker(locals.user.role)) redirect(303, homePathFor(locals.user.role));
+	return locals.user;
+}
+
+export function requireAdmin(locals: App.Locals) {
+	if (!locals.user) redirect(303, '/login');
+	if (locals.user.role !== 'admin') redirect(303, homePathFor(locals.user.role));
 	return locals.user;
 }

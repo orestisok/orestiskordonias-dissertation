@@ -1,5 +1,5 @@
-// Seeds the LOCAL database: categories, departments, a staff and a citizen account, and sample
-// reports around Thessaloniki. Safe to rerun. Usage: npm run db:seed
+// Seeds the LOCAL database: categories, departments, an admin, a staff and a citizen account,
+// and sample reports around Thessaloniki. Safe to rerun. Usage: npm run db:seed
 import { hashPassword } from 'better-auth/crypto';
 import { count, eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -7,7 +7,8 @@ import postgres from 'postgres';
 import * as schema from '../src/lib/server/db/schema';
 import type { NewReportEvent, ReportStatus, UserRole } from '../src/lib/server/db/schema';
 
-const { DATABASE_URL, SEED_STAFF_PASSWORD, SEED_CITIZEN_PASSWORD } = process.env;
+const { DATABASE_URL, SEED_ADMIN_PASSWORD, SEED_STAFF_PASSWORD, SEED_CITIZEN_PASSWORD } =
+	process.env;
 
 function fail(message: string): never {
 	console.error(`seed: ${message}`);
@@ -19,8 +20,8 @@ const host = new URL(DATABASE_URL).hostname;
 if (!['localhost', '127.0.0.1', '[::1]', '::1'].includes(host)) {
 	fail(`refusing to seed non-local database host "${host}"`);
 }
-if (!SEED_STAFF_PASSWORD || !SEED_CITIZEN_PASSWORD) {
-	fail('set SEED_STAFF_PASSWORD and SEED_CITIZEN_PASSWORD in .env');
+if (!SEED_ADMIN_PASSWORD || !SEED_STAFF_PASSWORD || !SEED_CITIZEN_PASSWORD) {
+	fail('set SEED_ADMIN_PASSWORD, SEED_STAFF_PASSWORD and SEED_CITIZEN_PASSWORD in .env');
 }
 
 // Names match the submit form (src/routes/submit-report/+page.svelte)
@@ -43,6 +44,12 @@ const DEPARTMENTS = [
 ];
 
 const USERS: { email: string; name: string; role: UserRole; password: string }[] = [
+	{
+		email: 'admin@example.com',
+		name: 'Municipal Admin',
+		role: 'admin',
+		password: SEED_ADMIN_PASSWORD
+	},
 	{
 		email: 'staff@example.com',
 		name: 'Municipal Staff',

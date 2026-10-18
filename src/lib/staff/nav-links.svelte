@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { cn } from '$lib/utils.js';
-	import { isStaffActive, staffNav } from '$lib/staff/nav';
+	import { isStaffActive, visibleStaffNav } from '$lib/staff/nav';
 
 	let { onnavigate }: { onnavigate?: () => void } = $props();
 </script>
 
 <nav class="flex flex-col gap-1">
-	{#each staffNav as item (item.route)}
+	{#each visibleStaffNav() as item (item.route)}
 		{@const active = isStaffActive(item.route)}
 		<a
 			href={resolve(item.route)}
