@@ -5,7 +5,6 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import PasswordInput from '$lib/components/password-input.svelte';
 	import AuthPages from '$lib/components/auth-pages.svelte';
@@ -59,16 +58,6 @@
 							<Label for="password">Password</Label>
 						</div>
 						<PasswordInput id="password" name="password" autocomplete="current-password" />
-					</div>
-				</div>
-				<div>
-					<div>
-						<div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-							<div class="flex items-center space-x-2">
-								<Checkbox id="remember" name="remember" />
-								<Label for="remember">Remember for 30 days</Label>
-							</div>
-						</div>
 					</div>
 				</div>
 				{#if form?.message ?? data.linkError}
