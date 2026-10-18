@@ -17,6 +17,7 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"db:seed": "tsx --env-file=.env scripts/seed.ts",
+		"admin:create": "tsx --env-file=.env scripts/create-admin.ts",
 		"auth:schema": "better-auth generate --config src/lib/server/auth.ts --output src/lib/server/db/schema/auth.ts --yes"
 	},
 	"devDependencies": {

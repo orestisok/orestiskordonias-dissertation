@@ -3,7 +3,7 @@
 import { relations } from 'drizzle-orm';
 import { pgEnum, pgTable, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
 
-export const userRole = pgEnum('user_role', ['citizen', 'staff']);
+export const userRole = pgEnum('user_role', ['citizen', 'staff', 'admin']);
 
 export const user = pgTable('user', {
 	id: text('id').primaryKey(),

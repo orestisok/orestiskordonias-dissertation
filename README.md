@@ -29,6 +29,18 @@ npm run dev
 npm run dev -- --open
 ```
 
+## Admin accounts
+
+Admins sign in at `/login` like everyone else and get a **Management** page in the dashboard, where they create, re-password and delete municipal staff accounts (`@thessaloniki.gr` emails only).
+
+Create the first admin, or promote an existing account, against the database in `DATABASE_URL`:
+
+```sh
+npm run admin:create -- --email name@thessaloniki.gr --name "Full Name"
+```
+
+The script asks for the password interactively. Pass `--yes` to write to a non-local database. Locally, `npm run db:seed` also creates `admin@example.com` with `SEED_ADMIN_PASSWORD`.
+
 ## Building
 
 To create a production version of your app:
