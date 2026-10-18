@@ -21,7 +21,6 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const email = String(data.get('email') ?? '').trim();
 		const password = String(data.get('password') ?? '');
-		const rememberMe = data.get('remember') === 'on';
 
 		if (!email || !password) {
 			return fail(400, { email, message: 'Enter your email and password.' });
@@ -31,7 +30,7 @@ export const actions: Actions = {
 		try {
 			// sveltekitCookies sets the session cookie on this response
 			const result = await auth.api.signInEmail({
-				body: { email, password, rememberMe, callbackURL: '/login' },
+				body: { email, password, callbackURL: '/login' },
 				headers: request.headers
 			});
 			role = result.user.role;
